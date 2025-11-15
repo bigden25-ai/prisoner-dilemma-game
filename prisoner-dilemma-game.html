@@ -94,17 +94,17 @@
         
         .educational-note h2 {
             color: #FFD700;
-            font-size: 10px;
-            margin-bottom: 10px;
+            font-size: 12px;
+            margin-bottom: 12px;
             text-shadow: 2px 2px 0px #000;
         }
         
         .educational-note p {
             color: #f5e6c8;
-            font-size: 8px;
-            line-height: 1.6;
+            font-size: 10px;
+            line-height: 1.8;
             text-shadow: 1px 1px 0px #000;
-            margin: 5px 0;
+            margin: 8px 0;
         }
         
         .character-grid {
@@ -402,6 +402,42 @@
                         <div class="character-trait">Vengeful</div>
                         <div class="character-description">Cooperates until betrayed once, then never forgives.</div>
                     </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('random')" data-char="random">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-random"></canvas>
+                        </div>
+                        <h3>THE GAMBLER</h3>
+                        <div class="character-trait">Unpredictable</div>
+                        <div class="character-description">Randomly chooses cooperate or defect each round.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('pavlov')" data-char="pavlov">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-pavlov"></canvas>
+                        </div>
+                        <h3>PAVLOV</h3>
+                        <div class="character-trait">Adaptive</div>
+                        <div class="character-description">Win-stay, lose-switch strategy. Repeats good choices.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('forgiving-tft')" data-char="forgiving-tft">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-forgiving-tft"></canvas>
+                        </div>
+                        <h3>FORGIVING</h3>
+                        <div class="character-trait">Merciful</div>
+                        <div class="character-description">Tit-for-tat with occasional forgiveness. Rarely holds grudges.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('generous-tft')" data-char="generous-tft">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-generous-tft"></canvas>
+                        </div>
+                        <h3>GENEROUS</h3>
+                        <div class="character-trait">Kind</div>
+                        <div class="character-description">Often cooperates even after being betrayed. Very generous.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -517,6 +553,63 @@
                     if (playerHistory.includes('defect')) return 'defect';
                     return 'cooperate';
                 }
+            },
+            'random': {
+                name: 'THE GAMBLER',
+                trait: 'Unpredictable',
+                color: '#ff9800',
+                style: 'normal',
+                decide: function() {
+                    return Math.random() < 0.5 ? 'cooperate' : 'defect';
+                }
+            },
+            'pavlov': {
+                name: 'PAVLOV',
+                trait: 'Adaptive',
+                color: '#00bcd4',
+                style: 'glasses',
+                decide: function(playerHistory, opponentHistory) {
+                    if (playerHistory.length === 0) return 'cooperate';
+                    const lastOpponent = opponentHistory[opponentHistory.length - 1];
+                    const lastPlayer = playerHistory[playerHistory.length - 1];
+                    // Win-stay, lose-switch: if last round was good (both cooperated or we defected while they cooperated), repeat
+                    // Otherwise switch
+                    if ((lastPlayer === 'cooperate' && lastOpponent === 'cooperate') || 
+                        (lastPlayer === 'defect' && lastOpponent === 'cooperate')) {
+                        return lastPlayer; // Stay
+                    }
+                    return lastPlayer === 'cooperate' ? 'defect' : 'cooperate'; // Switch
+                }
+            },
+            'forgiving-tft': {
+                name: 'FORGIVING',
+                trait: 'Merciful',
+                color: '#4caf50',
+                style: 'normal',
+                decide: function(playerHistory, opponentHistory) {
+                    if (playerHistory.length === 0) return 'cooperate';
+                    const lastPlayer = playerHistory[playerHistory.length - 1];
+                    // 10% chance to forgive and cooperate even after being defected
+                    if (lastPlayer === 'defect' && Math.random() < 0.1) {
+                        return 'cooperate';
+                    }
+                    return lastPlayer; // Otherwise tit-for-tat
+                }
+            },
+            'generous-tft': {
+                name: 'GENEROUS',
+                trait: 'Kind',
+                color: '#8bc34a',
+                style: 'normal',
+                decide: function(playerHistory, opponentHistory) {
+                    if (playerHistory.length === 0) return 'cooperate';
+                    const lastOpponent = opponentHistory[opponentHistory.length - 1];
+                    // If opponent defected, 30% chance to still cooperate
+                    if (lastOpponent === 'defect' && Math.random() < 0.3) {
+                        return 'cooperate';
+                    }
+                    return lastOpponent; // Otherwise mirror opponent
+                }
             }
         };
         
@@ -569,6 +662,10 @@
             drawCharacter('icon-always-defect', strategies['always-defect'].color, strategies['always-defect'].style, 120);
             drawCharacter('icon-always-cooperate', strategies['always-cooperate'].color, strategies['always-cooperate'].style, 120);
             drawCharacter('icon-grudger', strategies['grudger'].color, strategies['grudger'].style, 120);
+            drawCharacter('icon-random', strategies['random'].color, strategies['random'].style, 120);
+            drawCharacter('icon-pavlov', strategies['pavlov'].color, strategies['pavlov'].style, 120);
+            drawCharacter('icon-forgiving-tft', strategies['forgiving-tft'].color, strategies['forgiving-tft'].style, 120);
+            drawCharacter('icon-generous-tft', strategies['generous-tft'].color, strategies['generous-tft'].style, 120);
         }
         
         // Handle character selection
