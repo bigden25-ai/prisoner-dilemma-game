@@ -15,21 +15,41 @@
         
         body {
             font-family: 'Press Start 2P', cursive;
-            background: linear-gradient(180deg, #4a9ebb 0%, #6bb8d6 100%);
+            background: #87CEEB;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Scanlines effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
         }
         
         #gameContainer {
-            background: rgba(255, 255, 255, 0.1);
-            border: 4px solid #2d5a6e;
-            border-radius: 10px;
-            padding: 30px;
-            max-width: 900px;
+            background: transparent;
+            max-width: 1000px;
             width: 100%;
+            position: relative;
+            z-index: 1;
         }
         
         h1 {
@@ -37,7 +57,7 @@
             text-align: center;
             font-size: 24px;
             margin-bottom: 30px;
-            text-shadow: 4px 4px 0px #2d5a6e;
+            text-shadow: 3px 3px 0px #000;
             letter-spacing: 2px;
         }
         
@@ -49,45 +69,89 @@
             display: block;
         }
         
-        .character-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        /* Character Selection Layout */
+        .selection-container {
             margin-top: 30px;
         }
         
+        .selection-subtitle {
+            text-align: center;
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
         .character-card {
-            background: linear-gradient(180deg, #d4a537 0%, #b88d2e 100%);
-            border: 4px solid #8b6914;
+            background: linear-gradient(180deg, rgba(90, 74, 42, 0.9) 0%, rgba(61, 50, 32, 0.9) 100%);
+            border: 4px solid #D2691E;
+            border-radius: 8px;
             padding: 20px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             position: relative;
         }
         
         .character-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #FFD700;
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.4);
+        }
+        
+        .character-card.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            background: linear-gradient(180deg, rgba(90, 74, 42, 1) 0%, rgba(61, 50, 32, 1) 100%);
             transform: scale(1.05);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        .character-card:active {
+            transform: scale(0.98);
+        }
+        
+        .character-icon-container {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .character-icon {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #fff;
+            border-radius: 4px;
         }
         
         .character-card h3 {
-            color: #fff;
+            color: #FFD700;
             font-size: 14px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 0px #5a4a1a;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px #000;
         }
         
-        .character-card p {
+        .character-trait {
+            color: #fff;
+            font-size: 9px;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .character-description {
             color: #f5e6c8;
             font-size: 8px;
-            line-height: 1.6;
-        }
-        
-        .character-sprite {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 15px;
-            image-rendering: pixelated;
+            line-height: 1.5;
+            text-shadow: 1px 1px 0px #000;
         }
         
         .game-panel {
@@ -263,37 +327,48 @@
 </head>
 <body>
     <div id="gameContainer">
-        <h1>PRISONER'S DILEMMA</h1>
-        
         <!-- Character Selection Screen -->
         <div id="selectScreen" class="screen active">
-            <div style="text-align: center; color: #fff; font-size: 18px; margin-bottom: 20px; text-shadow: 3px 3px 0px #2d5a6e;">
-                CHOOSE YOUR OPPONENT!
-            </div>
+            <h1 style="margin-bottom: 10px; text-align: center;">CHOOSE YOUR OPPONENT!</h1>
+            <div class="selection-subtitle">Select an opponent to play against</div>
             
-            <div class="character-grid">
-                <div class="character-card" onclick="startGame('tit-for-tat')">
-                    <canvas class="character-sprite" width="80" height="80" id="sprite-tft"></canvas>
-                    <h3>TIT-FOR-TAT</h3>
-                    <p>Mirrors your last move. Starts with cooperation.</p>
-                </div>
-                
-                <div class="character-card" onclick="startGame('always-defect')">
-                    <canvas class="character-sprite" width="80" height="80" id="sprite-defect"></canvas>
-                    <h3>THE TRAITOR</h3>
-                    <p>Never cooperates. Always betrays.</p>
-                </div>
-                
-                <div class="character-card" onclick="startGame('always-cooperate')">
-                    <canvas class="character-sprite" width="80" height="80" id="sprite-coop"></canvas>
-                    <h3>THE TRUSTING</h3>
-                    <p>Always cooperates. Very naive.</p>
-                </div>
-                
-                <div class="character-card" onclick="startGame('grudger')">
-                    <canvas class="character-sprite" width="80" height="80" id="sprite-grudge"></canvas>
-                    <h3>GRUDGER</h3>
-                    <p>Cooperates until betrayed once, then never forgives.</p>
+            <div class="selection-container">
+                <div class="character-grid">
+                    <div class="character-card" onclick="selectCharacter('tit-for-tat')" data-char="tit-for-tat">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-tit-for-tat"></canvas>
+                        </div>
+                        <h3>TIT-FOR-TAT</h3>
+                        <div class="character-trait">Sneaky</div>
+                        <div class="character-description">Mirrors your last move. Starts with cooperation.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('always-defect')" data-char="always-defect">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-always-defect"></canvas>
+                        </div>
+                        <h3>THE TRAITOR</h3>
+                        <div class="character-trait">Ruthless</div>
+                        <div class="character-description">Never cooperates. Always betrays.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('always-cooperate')" data-char="always-cooperate">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-always-cooperate"></canvas>
+                        </div>
+                        <h3>THE TRUSTING</h3>
+                        <div class="character-trait">Naive</div>
+                        <div class="character-description">Always cooperates. Very naive.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('grudger')" data-char="grudger">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-grudger"></canvas>
+                        </div>
+                        <h3>GRUDGER</h3>
+                        <div class="character-trait">Vengeful</div>
+                        <div class="character-description">Cooperates until betrayed once, then never forgives.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -374,6 +449,9 @@
         const strategies = {
             'tit-for-tat': {
                 name: 'TIT-FOR-TAT',
+                trait: 'Sneaky',
+                color: '#4caf50',
+                style: 'glasses',
                 decide: function(playerHistory, opponentHistory) {
                     if (playerHistory.length === 0) return 'cooperate';
                     return playerHistory[playerHistory.length - 1];
@@ -381,18 +459,27 @@
             },
             'always-defect': {
                 name: 'THE TRAITOR',
+                trait: 'Ruthless',
+                color: '#f44336',
+                style: 'angry',
                 decide: function() {
                     return 'defect';
                 }
             },
             'always-cooperate': {
                 name: 'THE TRUSTING',
+                trait: 'Naive',
+                color: '#2196f3',
+                style: 'normal',
                 decide: function() {
                     return 'cooperate';
                 }
             },
             'grudger': {
                 name: 'GRUDGER',
+                trait: 'Vengeful',
+                color: '#9c27b0',
+                style: 'normal',
                 decide: function(playerHistory) {
                     if (playerHistory.includes('defect')) return 'defect';
                     return 'cooperate';
@@ -400,50 +487,85 @@
             }
         };
         
-        // Draw pixel art characters
-        function drawCharacter(canvasId, color, style) {
+        let selectedCharacter = null;
+        
+        // Draw pixel art characters (scaled for canvas)
+        function drawCharacter(canvasId, color, style, size = 120) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 80, 80);
+            ctx.clearRect(0, 0, size, size);
+            
+            const scale = size / 80;
             
             // Head
             ctx.fillStyle = '#f5e6c8';
-            ctx.fillRect(25, 10, 30, 25);
+            ctx.fillRect(25 * scale, 10 * scale, 30 * scale, 25 * scale);
             
             // Eyes
             ctx.fillStyle = '#2d3436';
             if (style === 'angry') {
-                ctx.fillRect(30, 18, 6, 4);
-                ctx.fillRect(44, 18, 6, 4);
+                ctx.fillRect(30 * scale, 18 * scale, 6 * scale, 4 * scale);
+                ctx.fillRect(44 * scale, 18 * scale, 6 * scale, 4 * scale);
             } else if (style === 'glasses') {
-                ctx.fillRect(28, 18, 8, 8);
-                ctx.fillRect(44, 18, 8, 8);
-                ctx.fillRect(36, 21, 8, 2);
+                ctx.fillRect(28 * scale, 18 * scale, 8 * scale, 8 * scale);
+                ctx.fillRect(44 * scale, 18 * scale, 8 * scale, 8 * scale);
+                ctx.fillRect(36 * scale, 21 * scale, 8 * scale, 2 * scale);
             } else {
-                ctx.fillRect(32, 20, 4, 4);
-                ctx.fillRect(44, 20, 4, 4);
+                ctx.fillRect(32 * scale, 20 * scale, 4 * scale, 4 * scale);
+                ctx.fillRect(44 * scale, 20 * scale, 4 * scale, 4 * scale);
             }
             
             // Body
             ctx.fillStyle = color;
-            ctx.fillRect(30, 35, 20, 25);
+            ctx.fillRect(30 * scale, 35 * scale, 20 * scale, 25 * scale);
             
             // Arms
-            ctx.fillRect(20, 40, 10, 15);
-            ctx.fillRect(50, 40, 10, 15);
+            ctx.fillRect(20 * scale, 40 * scale, 10 * scale, 15 * scale);
+            ctx.fillRect(50 * scale, 40 * scale, 10 * scale, 15 * scale);
             
             // Legs
             ctx.fillStyle = '#636e72';
-            ctx.fillRect(32, 60, 7, 18);
-            ctx.fillRect(41, 60, 7, 18);
+            ctx.fillRect(32 * scale, 60 * scale, 7 * scale, 18 * scale);
+            ctx.fillRect(41 * scale, 60 * scale, 7 * scale, 18 * scale);
         }
         
-        // Initialize character sprites
-        drawCharacter('sprite-tft', '#4caf50', 'glasses');
-        drawCharacter('sprite-defect', '#f44336', 'angry');
-        drawCharacter('sprite-coop', '#2196f3', 'normal');
-        drawCharacter('sprite-grudge', '#9c27b0', 'normal');
+        // Initialize all character icons
+        function initializeCharacterIcons() {
+            drawCharacter('icon-tit-for-tat', strategies['tit-for-tat'].color, strategies['tit-for-tat'].style, 120);
+            drawCharacter('icon-always-defect', strategies['always-defect'].color, strategies['always-defect'].style, 120);
+            drawCharacter('icon-always-cooperate', strategies['always-cooperate'].color, strategies['always-cooperate'].style, 120);
+            drawCharacter('icon-grudger', strategies['grudger'].color, strategies['grudger'].style, 120);
+        }
+        
+        // Handle character selection
+        function selectCharacter(charType) {
+            if (!charType || !strategies[charType]) return;
+            
+            // Update selected character
+            selectedCharacter = charType;
+            
+            // Update visual selection
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            const selectedCard = document.querySelector(`.character-card[data-char="${charType}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            // Start game after a brief delay for visual feedback
+            setTimeout(() => {
+                startGame(charType);
+            }, 300);
+        }
+        
+        // Initialize character icons on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeCharacterIcons);
+        } else {
+            initializeCharacterIcons();
+        }
         
         function startGame(opponentType) {
             gameState = {
@@ -569,6 +691,11 @@
         function resetGame() {
             showScreen('selectScreen');
             document.getElementById('historyGrid').innerHTML = '';
+            selectedCharacter = null;
+            // Clear selection highlight
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
         }
         
         function showScreen(screenId) {
