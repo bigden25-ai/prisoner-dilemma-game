@@ -615,45 +615,66 @@
         
         let selectedCharacter = null;
         
-        // Draw pixel art characters (scaled for canvas)
+        // Draw pixel art characters (higher resolution for modern retro look)
         function drawCharacter(canvasId, color, style, size = 120) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, size, size);
             
-            const scale = size / 80;
+            // Use 160x160 base resolution for finer pixels
+            const baseSize = 160;
+            const scale = size / baseSize;
             
-            // Head
+            // Head (more refined shape)
             ctx.fillStyle = '#f5e6c8';
-            ctx.fillRect(25 * scale, 10 * scale, 30 * scale, 25 * scale);
+            ctx.fillRect(50 * scale, 20 * scale, 60 * scale, 50 * scale);
             
-            // Eyes
+            // Eyes (smaller, more detailed)
             ctx.fillStyle = '#2d3436';
             if (style === 'angry') {
-                ctx.fillRect(30 * scale, 18 * scale, 6 * scale, 4 * scale);
-                ctx.fillRect(44 * scale, 18 * scale, 6 * scale, 4 * scale);
+                // Angry eyebrows
+                ctx.fillRect(60 * scale, 36 * scale, 12 * scale, 3 * scale);
+                ctx.fillRect(88 * scale, 36 * scale, 12 * scale, 3 * scale);
+                // Angry eyes
+                ctx.fillRect(62 * scale, 40 * scale, 8 * scale, 6 * scale);
+                ctx.fillRect(90 * scale, 40 * scale, 8 * scale, 6 * scale);
             } else if (style === 'glasses') {
-                ctx.fillRect(28 * scale, 18 * scale, 8 * scale, 8 * scale);
-                ctx.fillRect(44 * scale, 18 * scale, 8 * scale, 8 * scale);
-                ctx.fillRect(36 * scale, 21 * scale, 8 * scale, 2 * scale);
+                // Glasses frames
+                ctx.fillRect(56 * scale, 36 * scale, 16 * scale, 16 * scale);
+                ctx.fillRect(88 * scale, 36 * scale, 16 * scale, 16 * scale);
+                // Bridge
+                ctx.fillRect(72 * scale, 42 * scale, 16 * scale, 4 * scale);
+                // Eyes behind glasses
+                ctx.fillRect(60 * scale, 40 * scale, 8 * scale, 8 * scale);
+                ctx.fillRect(92 * scale, 40 * scale, 8 * scale, 8 * scale);
             } else {
-                ctx.fillRect(32 * scale, 20 * scale, 4 * scale, 4 * scale);
-                ctx.fillRect(44 * scale, 20 * scale, 4 * scale, 4 * scale);
+                // Normal eyes
+                ctx.fillRect(64 * scale, 40 * scale, 6 * scale, 6 * scale);
+                ctx.fillRect(90 * scale, 40 * scale, 6 * scale, 6 * scale);
+                // Eye shine
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(65 * scale, 41 * scale, 2 * scale, 2 * scale);
+                ctx.fillRect(91 * scale, 41 * scale, 2 * scale, 2 * scale);
+                ctx.fillStyle = '#2d3436';
             }
             
-            // Body
+            // Body (more detailed)
             ctx.fillStyle = color;
-            ctx.fillRect(30 * scale, 35 * scale, 20 * scale, 25 * scale);
+            ctx.fillRect(60 * scale, 70 * scale, 40 * scale, 50 * scale);
             
-            // Arms
-            ctx.fillRect(20 * scale, 40 * scale, 10 * scale, 15 * scale);
-            ctx.fillRect(50 * scale, 40 * scale, 10 * scale, 15 * scale);
+            // Arms (more refined)
+            ctx.fillRect(40 * scale, 80 * scale, 20 * scale, 30 * scale);
+            ctx.fillRect(100 * scale, 80 * scale, 20 * scale, 30 * scale);
             
-            // Legs
+            // Legs (more detailed)
             ctx.fillStyle = '#636e72';
-            ctx.fillRect(32 * scale, 60 * scale, 7 * scale, 18 * scale);
-            ctx.fillRect(41 * scale, 60 * scale, 7 * scale, 18 * scale);
+            ctx.fillRect(64 * scale, 120 * scale, 14 * scale, 36 * scale);
+            ctx.fillRect(82 * scale, 120 * scale, 14 * scale, 36 * scale);
+            
+            // Add some shading/details for depth
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(60 * scale, 70 * scale, 40 * scale, 10 * scale); // Body shadow
         }
         
         // Initialize all character icons
