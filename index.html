@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prisoner's Dilemma</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: #87CEEB;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Scanlines effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        #gameContainer {
+            background: transparent;
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 0px #000;
+            letter-spacing: 2px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* Character Selection Layout */
+        .selection-container {
+            margin-top: 30px;
+        }
+        
+        .selection-subtitle {
+            text-align: center;
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .character-card {
+            background: linear-gradient(180deg, rgba(90, 74, 42, 0.9) 0%, rgba(61, 50, 32, 0.9) 100%);
+            border: 4px solid #D2691E;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #FFD700;
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.4);
+        }
+        
+        .character-card.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            background: linear-gradient(180deg, rgba(90, 74, 42, 1) 0%, rgba(61, 50, 32, 1) 100%);
+            transform: scale(1.05);
+        }
+        
+        .character-card:active {
+            transform: scale(0.98);
+        }
+        
+        .character-icon-container {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .character-icon {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #fff;
+            border-radius: 4px;
+        }
+        
+        .character-card h3 {
+            color: #FFD700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .character-trait {
+            color: #fff;
+            font-size: 9px;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .character-description {
+            color: #f5e6c8;
+            font-size: 8px;
+            line-height: 1.5;
+            text-shadow: 1px 1px 0px #000;
+        }
+        
+        .game-panel {
+            background: linear-gradient(180deg, #5a4a2a 0%, #3d3220 100%);
+            border: 4px solid #d4a537;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .score-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        
+        .score-box {
+            text-align: center;
+            color: #f5e6c8;
+        }
+        
+        .score-box h3 {
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .score-box .score {
+            font-size: 32px;
+            color: #ffd700;
+            text-shadow: 2px 2px 0px #8b6914;
+        }
+        
+        .round-info {
+            text-align: center;
+            color: #f5e6c8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .choice-btn {
+            font-family: 'Press Start 2P', cursive;
+            padding: 20px 40px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 4px solid;
+            background: linear-gradient(180deg, #f5e6c8 0%, #d4c5a8 100%);
+            color: #3d3220;
+            transition: all 0.2s;
+            text-shadow: none;
+        }
+        
+        .choice-btn.cooperate {
+            border-color: #4caf50;
+        }
+        
+        .choice-btn.defect {
+            border-color: #f44336;
+        }
+        
+        .choice-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .choice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .history {
+            margin-top: 30px;
+        }
+        
+        .history h3 {
+            color: #f5e6c8;
+            font-size: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 5px;
+        }
+        
+        .history-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #1a1410;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #1a1410;
+            font-weight: bold;
+        }
+        
+        .history-dot.both-coop {
+            background: #4caf50;
+        }
+        
+        .history-dot.both-defect {
+            background: #f44336;
+        }
+        
+        .history-dot.you-win {
+            background: #ffd700;
+        }
+        
+        .history-dot.you-lose {
+            background: #ff9800;
+        }
+        
+        .result-message {
+            text-align: center;
+            color: #ffd700;
+            font-size: 14px;
+            margin: 20px 0;
+            min-height: 40px;
+            text-shadow: 2px 2px 0px #3d3220;
+        }
+        
+        .final-results {
+            text-align: center;
+            color: #f5e6c8;
+        }
+        
+        .final-results h2 {
+            color: #ffd700;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0px #3d3220;
+        }
+        
+        .final-results p {
+            font-size: 12px;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+        
+        .btn {
+            font-family: 'Press Start 2P', cursive;
+            padding: 15px 30px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 4px solid #8b6914;
+            background: linear-gradient(180deg, #d4a537 0%, #b88d2e 100%);
+            color: #fff;
+            margin: 20px auto;
+            display: block;
+            text-shadow: 2px 2px 0px #5a4a1a;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        canvas {
+            display: block;
+            margin: 20px auto;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Character Selection Screen -->
+        <div id="selectScreen" class="screen active">
+            <h1 style="margin-bottom: 10px; text-align: center;">CHOOSE YOUR OPPONENT!</h1>
+            <div class="selection-subtitle">Select an opponent to play against</div>
+            
+            <div class="selection-container">
+                <div class="character-grid">
+                    <div class="character-card" onclick="selectCharacter('tit-for-tat')" data-char="tit-for-tat">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-tit-for-tat"></canvas>
+                        </div>
+                        <h3>TIT-FOR-TAT</h3>
+                        <div class="character-trait">Sneaky</div>
+                        <div class="character-description">Mirrors your last move. Starts with cooperation.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('always-defect')" data-char="always-defect">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-always-defect"></canvas>
+                        </div>
+                        <h3>THE TRAITOR</h3>
+                        <div class="character-trait">Ruthless</div>
+                        <div class="character-description">Never cooperates. Always betrays.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('always-cooperate')" data-char="always-cooperate">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-always-cooperate"></canvas>
+                        </div>
+                        <h3>THE TRUSTING</h3>
+                        <div class="character-trait">Naive</div>
+                        <div class="character-description">Always cooperates. Very naive.</div>
+                    </div>
+                    
+                    <div class="character-card" onclick="selectCharacter('grudger')" data-char="grudger">
+                        <div class="character-icon-container">
+                            <canvas class="character-icon" width="120" height="120" id="icon-grudger"></canvas>
+                        </div>
+                        <h3>GRUDGER</h3>
+                        <div class="character-trait">Vengeful</div>
+                        <div class="character-description">Cooperates until betrayed once, then never forgives.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Play Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-panel">
+                <div class="round-info">
+                    <span>ROUND <span id="currentRound">1</span> / <span id="totalRounds">10</span></span>
+                </div>
+                
+                <div class="score-display">
+                    <div class="score-box">
+                        <h3>YOUR SCORE</h3>
+                        <div class="score" id="playerScore">0</div>
+                    </div>
+                    <div class="score-box">
+                        <h3><span id="opponentName">OPPONENT</span></h3>
+                        <div class="score" id="opponentScore">0</div>
+                    </div>
+                </div>
+                
+                <div class="result-message" id="resultMessage"></div>
+                
+                <div class="choices">
+                    <button class="choice-btn cooperate" onclick="makeChoice('cooperate')">
+                        COOPERATE
+                    </button>
+                    <button class="choice-btn defect" onclick="makeChoice('defect')">
+                        DEFECT
+                    </button>
+                </div>
+                
+                <div class="history">
+                    <h3>ROUND HISTORY</h3>
+                    <div class="history-grid" id="historyGrid"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <div class="game-panel">
+                <div class="final-results">
+                    <h2 id="finalResult">GAME OVER</h2>
+                    <p>YOUR FINAL SCORE: <span id="finalPlayerScore" style="color: #ffd700;">0</span></p>
+                    <p>OPPONENT SCORE: <span id="finalOpponentScore" style="color: #ffd700;">0</span></p>
+                    <p id="winMessage"></p>
+                </div>
+                
+                <button class="btn" onclick="resetGame()">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            currentRound: 0,
+            totalRounds: 10,
+            playerScore: 0,
+            opponentScore: 0,
+            playerHistory: [],
+            opponentHistory: [],
+            currentOpponent: null,
+            opponentName: ''
+        };
+        
+        // Payoff matrix: [player points, opponent points]
+        const payoffs = {
+            'cooperate-cooperate': [3, 3],
+            'cooperate-defect': [0, 5],
+            'defect-cooperate': [5, 0],
+            'defect-defect': [1, 1]
+        };
+        
+        // AI Strategies
+        const strategies = {
+            'tit-for-tat': {
+                name: 'TIT-FOR-TAT',
+                trait: 'Sneaky',
+                color: '#4caf50',
+                style: 'glasses',
+                decide: function(playerHistory, opponentHistory) {
+                    if (playerHistory.length === 0) return 'cooperate';
+                    return playerHistory[playerHistory.length - 1];
+                }
+            },
+            'always-defect': {
+                name: 'THE TRAITOR',
+                trait: 'Ruthless',
+                color: '#f44336',
+                style: 'angry',
+                decide: function() {
+                    return 'defect';
+                }
+            },
+            'always-cooperate': {
+                name: 'THE TRUSTING',
+                trait: 'Naive',
+                color: '#2196f3',
+                style: 'normal',
+                decide: function() {
+                    return 'cooperate';
+                }
+            },
+            'grudger': {
+                name: 'GRUDGER',
+                trait: 'Vengeful',
+                color: '#9c27b0',
+                style: 'normal',
+                decide: function(playerHistory) {
+                    if (playerHistory.includes('defect')) return 'defect';
+                    return 'cooperate';
+                }
+            }
+        };
+        
+        let selectedCharacter = null;
+        
+        // Draw pixel art characters (scaled for canvas)
+        function drawCharacter(canvasId, color, style, size = 120) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, size, size);
+            
+            const scale = size / 80;
+            
+            // Head
+            ctx.fillStyle = '#f5e6c8';
+            ctx.fillRect(25 * scale, 10 * scale, 30 * scale, 25 * scale);
+            
+            // Eyes
+            ctx.fillStyle = '#2d3436';
+            if (style === 'angry') {
+                ctx.fillRect(30 * scale, 18 * scale, 6 * scale, 4 * scale);
+                ctx.fillRect(44 * scale, 18 * scale, 6 * scale, 4 * scale);
+            } else if (style === 'glasses') {
+                ctx.fillRect(28 * scale, 18 * scale, 8 * scale, 8 * scale);
+                ctx.fillRect(44 * scale, 18 * scale, 8 * scale, 8 * scale);
+                ctx.fillRect(36 * scale, 21 * scale, 8 * scale, 2 * scale);
+            } else {
+                ctx.fillRect(32 * scale, 20 * scale, 4 * scale, 4 * scale);
+                ctx.fillRect(44 * scale, 20 * scale, 4 * scale, 4 * scale);
+            }
+            
+            // Body
+            ctx.fillStyle = color;
+            ctx.fillRect(30 * scale, 35 * scale, 20 * scale, 25 * scale);
+            
+            // Arms
+            ctx.fillRect(20 * scale, 40 * scale, 10 * scale, 15 * scale);
+            ctx.fillRect(50 * scale, 40 * scale, 10 * scale, 15 * scale);
+            
+            // Legs
+            ctx.fillStyle = '#636e72';
+            ctx.fillRect(32 * scale, 60 * scale, 7 * scale, 18 * scale);
+            ctx.fillRect(41 * scale, 60 * scale, 7 * scale, 18 * scale);
+        }
+        
+        // Initialize all character icons
+        function initializeCharacterIcons() {
+            drawCharacter('icon-tit-for-tat', strategies['tit-for-tat'].color, strategies['tit-for-tat'].style, 120);
+            drawCharacter('icon-always-defect', strategies['always-defect'].color, strategies['always-defect'].style, 120);
+            drawCharacter('icon-always-cooperate', strategies['always-cooperate'].color, strategies['always-cooperate'].style, 120);
+            drawCharacter('icon-grudger', strategies['grudger'].color, strategies['grudger'].style, 120);
+        }
+        
+        // Handle character selection
+        function selectCharacter(charType) {
+            if (!charType || !strategies[charType]) return;
+            
+            // Update selected character
+            selectedCharacter = charType;
+            
+            // Update visual selection
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            const selectedCard = document.querySelector(`.character-card[data-char="${charType}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            // Start game after a brief delay for visual feedback
+            setTimeout(() => {
+                startGame(charType);
+            }, 300);
+        }
+        
+        // Initialize character icons on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeCharacterIcons);
+        } else {
+            initializeCharacterIcons();
+        }
+        
+        function startGame(opponentType) {
+            gameState = {
+                currentRound: 0,
+                totalRounds: 10,
+                playerScore: 0,
+                opponentScore: 0,
+                playerHistory: [],
+                opponentHistory: [],
+                currentOpponent: opponentType,
+                opponentName: strategies[opponentType].name
+            };
+            
+            document.getElementById('opponentName').textContent = gameState.opponentName;
+            showScreen('gameScreen');
+            nextRound();
+        }
+        
+        function makeChoice(choice) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Get opponent's choice
+            const opponentChoice = strategies[gameState.currentOpponent].decide(
+                gameState.playerHistory,
+                gameState.opponentHistory
+            );
+            
+            // Record choices
+            gameState.playerHistory.push(choice);
+            gameState.opponentHistory.push(opponentChoice);
+            
+            // Calculate points
+            const key = `${choice}-${opponentChoice}`;
+            const [playerPoints, opponentPoints] = payoffs[key];
+            
+            gameState.playerScore += playerPoints;
+            gameState.opponentScore += opponentPoints;
+            
+            // Update display
+            updateScores();
+            showResult(choice, opponentChoice, playerPoints);
+            updateHistory(choice, opponentChoice);
+            
+            // Next round or end game
+            setTimeout(() => {
+                if (gameState.currentRound >= gameState.totalRounds) {
+                    endGame();
+                } else {
+                    nextRound();
+                }
+            }, 2000);
+        }
+        
+        function nextRound() {
+            gameState.currentRound++;
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+            document.getElementById('totalRounds').textContent = gameState.totalRounds;
+            document.getElementById('resultMessage').textContent = '';
+            
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+        
+        function updateScores() {
+            document.getElementById('playerScore').textContent = gameState.playerScore;
+            document.getElementById('opponentScore').textContent = gameState.opponentScore;
+        }
+        
+        function showResult(playerChoice, opponentChoice, points) {
+            let message = '';
+            if (playerChoice === 'cooperate' && opponentChoice === 'cooperate') {
+                message = 'BOTH COOPERATED! +3 points each';
+            } else if (playerChoice === 'defect' && opponentChoice === 'defect') {
+                message = 'BOTH DEFECTED! +1 point each';
+            } else if (playerChoice === 'cooperate') {
+                message = 'YOU WERE BETRAYED! +0 points';
+            } else {
+                message = 'YOU BETRAYED THEM! +5 points';
+            }
+            document.getElementById('resultMessage').textContent = message;
+        }
+        
+        function updateHistory(playerChoice, opponentChoice) {
+            const grid = document.getElementById('historyGrid');
+            const dot = document.createElement('div');
+            dot.className = 'history-dot';
+            
+            if (playerChoice === 'cooperate' && opponentChoice === 'cooperate') {
+                dot.classList.add('both-coop');
+                dot.textContent = 'CC';
+            } else if (playerChoice === 'defect' && opponentChoice === 'defect') {
+                dot.classList.add('both-defect');
+                dot.textContent = 'DD';
+            } else if (playerChoice === 'defect') {
+                dot.classList.add('you-win');
+                dot.textContent = 'DC';
+            } else {
+                dot.classList.add('you-lose');
+                dot.textContent = 'CD';
+            }
+            
+            grid.appendChild(dot);
+        }
+        
+        function endGame() {
+            document.getElementById('finalPlayerScore').textContent = gameState.playerScore;
+            document.getElementById('finalOpponentScore').textContent = gameState.opponentScore;
+            
+            let winMessage = '';
+            if (gameState.playerScore > gameState.opponentScore) {
+                winMessage = 'VICTORY! You outscored your opponent!';
+            } else if (gameState.playerScore < gameState.opponentScore) {
+                winMessage = 'DEFEAT! Your opponent got the better of you.';
+            } else {
+                winMessage = 'TIE! You matched your opponent perfectly.';
+            }
+            document.getElementById('winMessage').textContent = winMessage;
+            
+            showScreen('resultsScreen');
+        }
+        
+        function resetGame() {
+            showScreen('selectScreen');
+            document.getElementById('historyGrid').innerHTML = '';
+            selectedCharacter = null;
+            // Clear selection highlight
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+        
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
+
